@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공공일자리 참여자 분석 대시보드</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            padding: 30px;
+            text-align: center;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-group label {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .control-group select {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .dashboard {
+            padding: 30px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card.total {
+            border-left-color: #6c757d;
+        }
+
+        .stat-card.employed {
+            border-left-color: #28a745;
+        }
+
+        .stat-card.rate {
+            border-left-color: #007bff;
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            color: #6c757d;
+            font-size: 1.2em;
+        }
+
+        .chart-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+        }
+
+        .chart-wrapper {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-wrapper h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #495057;
+            font-size: 1.4em;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-label {
+            min-width: 120px;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .bar-visual {
+            flex: 1;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 10px;
+            color: white;
+            font-size: 0.8em;
+            font-weight: bold;
+            transition: width 0.8s ease;
+        }
+
+        .pie-chart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .pie-visual {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .pie-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .program-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .program-table th {
+            background: #4facfe;
+            color: white;
+            padding: 20px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .program-table td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .program-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-weight: bold;
+            z-index: 1000;
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+
+            .bar-label {
+                min-width: 80px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator">✅ 배포 성공!</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🏢 공공일자리 참여자 분석</h1>
+            <p>연령대별 사업 성과 및 취업 연계율 분석 대시보드</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="ageSelect">📊 참여자 연령대 선택:</label>
+                <select id="ageSelect">
+                    <option value="">연령대를 선택하세요</option>
+                    <option value="20대">20대</option>
+                    <option value="30대">30대</option>
+                    <option value="40대">40대</option>
+                    <option value="50대">50대</option>
+                    <option value="60대 이상">60대 이상</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="dashboard" id="dashboard">
+            <div class="no-data" id="noData">
+                <h2>👆 위에서 연령대를 선택해주세요</h2>
+                <p>선택한 연령대의 사업별 취업 연계율을 확인할 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 샘플 데이터 - 실제 분석 결과를 미리 계산해둔 것
+        const analysisResults = {
+            "20대": [
+                {program: "AI데이터 라벨러", total: 60, employed: 60, employmentRate: 100.0},
+            ],
+            "30대": [
+                {program: "AI데이터 라벨러", total: 61, employed: 44, employmentRate: 72.1},
+                {program: "어르신 돌봄 지원", total: 88, employed: 26, employmentRate: 29.5},
+                {program: "지역방역 일자리", total: 17, employed: 3, employmentRate: 17.6}
+            ],
+            "40대": [
+                {program: "어르신 돌봄 지원", total: 60, employed: 36, employmentRate: 60.0},
+                {program: "지역방역 일자리", total: 20, employed: 2, employmentRate: 10.0},
+                {program: "AI데이터 라벨러", total: 20, employed: 4, employmentRate: 20.0}
+            ],
+            "50대": [
+                {program: "어르신 돌봄 지원", total: 54, employed: 20, employmentRate: 37.0},
+                {program: "AI데이터 라벨러", total: 11, employed: 4, employmentRate: 36.4},
+                {program: "지역방역 일자리", total: 80, employed: 15, employmentRate: 18.8}
+            ],
+            "60대 이상": [
+                {program: "어르신 돌봄 지원", total: 50, employed: 25, employmentRate: 50.0},
+                {program: "AI데이터 라벨러", total: 50, employed: 25, employmentRate: 50.0},
+                {program: "지역방역 일자리", total: 50, employed: 10, employmentRate: 20.0}
+            ]
+        };
+
+        const programColors = {
+            "AI데이터 라벨러": "#4facfe",
+            "어르신 돌봄 지원": "#ff6b6b", 
+            "지역방역 일자리": "#4ecdc4"
+        };
+
+        function updateStatsCards(data) {
+            const totalParticipants = data.reduce((sum, item) => sum + item.total, 0);
+            const totalEmployed = data.reduce((sum, item) => sum + item.employed, 0);
+            const averageRate = totalParticipants > 0 ? (totalEmployed / totalParticipants * 100).toFixed(1) : 0;
+
+            return `
+                <div class="stats-grid">
+                    <div class="stat-card total">
+                        <div class="stat-number" style="color: #6c757d;">${totalParticipants}</div>
+                        <div class="stat-label">총 참여자 수</div>
+                    </div>
+                    <div class="stat-card employed">
+                        <div class="stat-number" style="color: #28a745;">${totalEmployed}</div>
+                        <div class="stat-label">취업 연계 성공</div>
+                    </div>
+                    <div class="stat-card rate">
+                        <div class="stat-number" style="color: #007bff;">${averageRate}%</div>
+                        <div class="stat-label">평균 취업 연계율</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createBarChart(data) {
+            const maxTotal = Math.max(...data.map(item => item.total));
+            
+            return `
+                <div class="bar-chart">
+                    ${data.map(item => `
+                        <div class="bar-item">
+                            <div class="bar-label">${item.program.replace(' ', '<br>')}</div>
+                            <div class="bar-visual">
+                                <div class="bar-fill" style="width: ${(item.total / maxTotal) * 100}%">
+                                    ${item.total}명
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function createPieChart(data) {
+            const total = data.reduce((sum, item) => sum + item.total, 0);
+            let angle = 0;
+            
+            const segments = data.map(item => {
+                const percentage = (item.total / total) * 100;
+                const startAngle = angle;
+                angle += (item.total / total) * 360;
+                
+                return {
+                    ...item,
+                    percentage: percentage.toFixed(1),
+                    startAngle,
+                    endAngle: angle,
+                    color: programColors[item.program] || '#ccc'
+                };
+            });
+
+            const averageRate = total > 0 ? ((data.reduce((sum, item) => sum + item.employed, 0) / total) * 100).toFixed(1) : 0;
+
+            return `
+                <div class="pie-chart">
+                    <div class="pie-visual" style="background: conic-gradient(${segments.map(seg => `${seg.color} ${seg.startAngle}deg ${seg.endAngle}deg`).join(', ')})">
+                        평균 ${averageRate}%
+                    </div>
+                    <div class="pie-legend">
+                        ${segments.map(seg => `
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: ${seg.color}"></div>
+                                <span>${seg.program}: ${seg.percentage}%</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function createDetailTable(data) {
+            return `
+                <table class="program-table">
+                    <thead>
+                        <tr>
+                            <th>사업명</th>
+                            <th>총 참여자</th>
+                            <th>취업 연계</th>
+                            <th>취업 연계율</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.map(item => `
+                            <tr>
+                                <td><strong>${item.program}</strong></td>
+                                <td>${item.total}명</td>
+                                <td>${item.employed}명</td>
+                                <td>
+                                    <div>
+                                        <span style="font-weight: bold; color: #007bff;">${item.employmentRate}%</span>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: ${item.employmentRate}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function updateDashboard(ageGroup) {
+            const dashboardElement = document.getElementById('dashboard');
+
+            if (!ageGroup || !analysisResults[ageGroup]) {
+                dashboardElement.innerHTML = `
+                    <div class="no-data">
+                        <h2>👆 위에서 연령대를 선택해주세요</h2>
+                        <p>선택한 연령대의 사업별 취업 연계율을 확인할 수 있습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const data = analysisResults[ageGroup];
+            
+            const statsCards = updateStatsCards(data);
+            const barChart = createBarChart(data);
+            const pieChart = createPieChart(data);
+            const detailTable = createDetailTable(data);
+
+            dashboardElement.innerHTML = `
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <h2 style="color: #495057; margin-bottom: 10px;">📋 ${ageGroup} 연령대 분석 결과</h2>
+                    <p style="color: #6c757d; font-size: 1.1em;">선택한 연령대의 사업별 성과를 확인해보세요</p>
+                </div>
+                ${statsCards}
+                <div class="chart-container">
+                    <div class="chart-wrapper">
+                        <h3>📊 사업별 참여자 수</h3>
+                        ${barChart}
+                    </div>
+                    <div class="chart-wrapper">
+                        <h3>🎯 사업 구성 비율</h3>
+                        ${pieChart}
+                    </div>
+                </div>
+                <div style="margin-top: 30px;">
+                    <h3 style="text-align: center; margin-bottom: 20px; color: #495057;">📊 상세 현황</h3>
+                    ${detailTable}
+                </div>
+            `;
+        }
+
+        // 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ 대시보드 로드 완료!');
+            
+            const ageSelect = document.getElementById('ageSelect');
+            ageSelect.addEventListener('change', function() {
+                console.log('선택된 연령대:', this.value);
+                updateDashboard(this.value);
+            });
+        });
+    </script>
+</body>
+</html>
